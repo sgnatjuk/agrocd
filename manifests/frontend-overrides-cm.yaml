@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guestbook-ui-overrides
+  namespace: default
+data:
+  guestbook.php: |
+    <?php
+    require 'vendor/autoload.php';
+    header('Content-Type: application/json');
+
+    function rc($host){ return new Predis\Client("tcp://{$host}:6379"); }
+    function ok($x){ echo json_encode($x); exit; }
+    function err($e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); exit; }
+
+    $cmd = $_GET['cmd'] ?? 'get';
+    try {
+      if ($cmd === 'post') {
+        $msg = isset($_GET['msg']) ? trim($_GET['msg']) : '';
+        if ($msg === '') ok(['ok'=>false,'reason'=>'empty message']);
+        // пишем в master как Список
+        $r = rc('redis-master');
+        $newLen = $r->lpush('guestbook', $msg);
+        ok(['ok'=>true,'pushed'=>$msg,'length'=>$newLen]);
+      } elseif ($cmd === 'get') {
+        // читаем с replica как Список
+        $r = rc('redis-replica');
+        $items = $r->lrange('guestbook', 0, -1);
+        ok(['data'=>$items, 'count'=>count($items)]);
+      } elseif ($cmd === 'stats') {
+        // быстрая диагностика
+        $rm = rc('redis-master'); $rr = rc('redis-replica');
+        $lenM = $rm->llen('guestbook');
+        $lenR = $rr->llen('guestbook');
+        ok([
+          'key' => 'guestbook',
+          'type_master' => $rm->type('guestbook'),
+          'type_replica'=> $rr->type('guestbook'),
+          'len_master'  => $lenM,
+          'len_replica' => $lenR
+        ]);
+      } else {
+        ok(['ok'=>false,'reason'=>'unknown cmd']);
+      }
+    } catch (Exception $e) { err($e); }
