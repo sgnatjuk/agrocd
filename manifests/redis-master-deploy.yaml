@@ -3,9 +3,9 @@ kind: Deployment
 metadata:
   name: redis-master
   namespace: default
-labels:
-  app: redis
-  role: master
+  labels:
+    app: redis
+    role: master
 spec:
   replicas: 1
   selector:

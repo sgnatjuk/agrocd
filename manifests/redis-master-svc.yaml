@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: redis-master
   namespace: default
-labels:
-  app: redis
-  role: master
+  labels:
+    app: redis
+    role: master
 spec:
   selector:
     app: redis

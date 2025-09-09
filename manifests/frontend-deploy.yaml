@@ -3,9 +3,9 @@ kind: Deployment
 metadata:
   name: frontend
   namespace: default
-labels:
-  app: guestbook
-  tier: frontend
+  labels:
+    app: guestbook
+    tier: frontend
 spec:
   replicas: 3
   selector:

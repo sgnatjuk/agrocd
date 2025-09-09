@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: redis-replica
   namespace: default
-labels:
-  app: redis
-  role: replica
+  labels:
+    app: redis
+    role: replica
 spec:
   selector:
     app: redis
@@ -21,9 +21,9 @@ kind: Service
 metadata:
   name: redis-follower
   namespace: default
-labels:
-  app: redis
-  role: replica
+  labels:
+    app: redis
+    role: replica
 spec:
   selector:
     app: redis
